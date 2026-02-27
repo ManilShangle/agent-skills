@@ -18,7 +18,7 @@ Official Apify Agent Skills for web scraping, data extraction, and automation. W
 | `apify-lead-generation` | Generate B2B/B2C leads by scraping Google Maps, websites, Instagram, TikTok, Facebook, LinkedIn, YouTube, and Google Search using Apify Actors | [SKILL.md](skills/apify-lead-generation/SKILL.md) |
 | `apify-market-research` | Analyze market conditions, geographic opportunities, pricing, consumer behavior, and product validation across Google Maps, Facebook, Instagram, Booking.com, and TripAdvisor | [SKILL.md](skills/apify-market-research/SKILL.md) |
 | `apify-trend-analysis` | Discover and track emerging trends across Google Trends, Instagram, Facebook, YouTube, and TikTok to inform content strategy | [SKILL.md](skills/apify-trend-analysis/SKILL.md) |
-| `apify-ultimate-scraper` | Universal AI-powered web scraper for any platform. Scrape data from Instagram, Facebook, TikTok, YouTube, Google Maps, Google Search, Google Trends, Booking.com, and TripAdvisor for lead generation, brand monitoring, competitor analysis, influencer discovery, trend research, and more. | [SKILL.md](skills/apify-ultimate-scraper/SKILL.md) |
+| `apify-ultimate-scraper` | Universal AI-powered web scraper for any platform. Scrape data from Instagram, Facebook, TikTok, YouTube, Google Maps, Google Search, Google Trends, Booking.com, and TripAdvisor for lead generation, brand monitoring, competitor analysis, influencer discovery, trend research, and more | [SKILL.md](skills/apify-ultimate-scraper/SKILL.md) |
 <!-- END_SKILLS_TABLE -->
 
 ## Installation

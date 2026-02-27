@@ -255,7 +255,8 @@
       "source": "./",
       "category": "development",
       "commands": [
-        "./commands/create-actor.md"
+        "./commands/create-actor.md",
+        "./commands/generate-output-schema.md"
       ]
     },
     {
