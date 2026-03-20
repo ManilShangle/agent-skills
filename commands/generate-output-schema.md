@@ -13,6 +13,8 @@ You are generating output schema files for an Apify Actor. The output schema tel
 - **Every field is nullable**: APIs and websites are unpredictable — always set `"nullable": true`
 - **Anonymize examples**: Never use real user IDs, usernames, or personal data in examples
 - **Verify against code**: If TypeScript types exist, cross-check the schema against both the type definition AND the code that produces the values
+- **Reuse existing patterns**: Before generating schemas, check if other Actors in the same repository already have output schemas — match their structure, naming conventions, description style, and formatting
+- **Don't reinvent the wheel**: Reuse existing type definitions, interfaces, and utilities from the codebase instead of creating duplicate definitions
 
 ---
 
@@ -27,16 +29,18 @@ Initial request: $ARGUMENTS
 2. Find the `.actor/` directory containing `actor.json`
 3. Read `actor.json` to understand the Actor's configuration
 4. Check if `dataset_schema.json`, `output_schema.json`, and `key_value_store_schema.json` already exist
-5. Find all places where data is pushed to the dataset:
+5. **Search for existing schemas in the repository**: Look for other `.actor/` directories or schema files (e.g., `**/dataset_schema.json`, `**/output_schema.json`, `**/key_value_store_schema.json`) to learn the repo's conventions — match their description style, field naming, example formatting, and overall structure
+6. Find all places where data is pushed to the dataset:
    - **JavaScript/TypeScript**: Search for `Actor.pushData(`, `dataset.pushData(`, `Dataset.pushData(`
    - **Python**: Search for `Actor.push_data(`, `dataset.push_data(`, `Dataset.push_data(`
-6. Find all places where data is stored in the key-value store:
+7. Find all places where data is stored in the key-value store:
    - **JavaScript/TypeScript**: Search for `Actor.setValue(`, `keyValueStore.setValue(`, `KeyValueStore.setValue(`
    - **Python**: Search for `Actor.set_value(`, `key_value_store.set_value(`, `KeyValueStore.set_value(`
-7. Find output type definitions:
-   - **TypeScript**: Look for output type interfaces/types (e.g., in `src/types/`, `src/types/output.ts`)
-   - **Python**: Look for TypedDict, dataclass, or Pydantic model definitions
-8. If inline `storages.dataset` or `storages.keyValueStore` config exists in `actor.json`, note it for migration
+8. Find output type definitions — **reuse them directly** instead of recreating from scratch:
+   - **TypeScript**: Look for output type interfaces/types (e.g., in `src/types/`, `src/types/output.ts`). If an interface or type already defines the output shape, derive the schema fields from it — do not create a parallel definition
+   - **Python**: Look for TypedDict, dataclass, or Pydantic model definitions. Use the existing field names, types, and docstrings as the source of truth
+9. Check for existing shared schema utilities or helper functions in the codebase that handle schema generation or validation — reuse them rather than creating new logic
+10. If inline `storages.dataset` or `storages.keyValueStore` config exists in `actor.json`, note it for migration
 
 Present findings to user: list all discovered dataset output fields, key-value store keys, their types, and where they come from.
 
@@ -55,7 +59,8 @@ Present findings to user: list all discovered dataset output fields, key-value s
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
-            // All output fields here
+            // ALL output fields here — every field the Actor can produce,
+            // not just the ones shown in the overview view
         },
         "required": [],
         "additionalProperties": true
@@ -80,15 +85,31 @@ Present findings to user: list all discovered dataset output fields, key-value s
 }
 ```
 
+### Consistency with existing schemas
+
+If existing output schemas were found in the repository during Phase 1 (step 5), follow their conventions:
+- Match the **description writing style** (sentence case vs. lowercase, period vs. no period, etc.)
+- Match the **field naming convention** (camelCase vs. snake_case) — this must also match the actual keys produced by the Actor code
+- Match the **example value style** (e.g., date formats, URL patterns, placeholder names)
+- Match the **view structure** (number of fields in overview, display format choices)
+- Match the **JSON formatting** (indentation, property ordering, spacing) — all schemas in the same repository must use identical formatting, including standalone Actors
+
+When the Actor code already has well-defined TypeScript interfaces or Python type classes, derive fields directly from those types rather than re-analyzing pushData/push_data calls from scratch. The type definition is the canonical source.
+
 ### Hard rules (no exceptions)
 
 | Rule | Detail |
 |------|--------|
+| **All fields in `properties`** | The `fields.properties` object must contain **every** field the Actor can output, not just the fields shown in the overview view. The views section selects a subset for display — the `properties` section must be the complete superset |
 | `"nullable": true` | On **every** field — APIs are unpredictable |
-| `"additionalProperties": true` | On **every** object (top-level and nested) |
-| `"required": []` | Always empty array |
+| `"additionalProperties": true` | On the **top-level `fields` object** AND on **every nested object** within `properties`. This is the most commonly missed rule — it must appear at both levels |
+| `"required": []` | Always empty array — on the **top-level `fields` object** AND on **every nested object** within `properties` |
 | Anonymized examples | No real user IDs, usernames, or content |
 | `"type"` required with `"nullable"` | AJV rejects `nullable` without a `type` on the same field |
+
+> **Warning — most common mistakes**:
+> 1. Only including fields that appear in the overview view. The `fields.properties` must list ALL output fields, even if they are not in the `views` section.
+> 2. Only adding `"required": []` and `"additionalProperties": true` on nested object-type properties but forgetting them on the top-level `fields` object. Both levels need them.
 
 > **Note**: `nullable` is an Apify-specific extension to JSON Schema draft-07. It is intentional and correct.
 
@@ -361,9 +382,10 @@ If `key_value_store_schema.json` was generated in Phase 3, add a second property
 **Goal**: Ensure correctness and completeness
 
 **Checklist**:
-- [ ] Every output field from the source code is in `dataset_schema.json`
+- [ ] **Every** output field from the source code is in `dataset_schema.json` `fields.properties` — not just the overview view fields but ALL fields the Actor can produce
 - [ ] Every field has `"nullable": true`
-- [ ] Every object has `"additionalProperties": true` and `"required": []`
+- [ ] The **top-level `fields` object** has both `"additionalProperties": true` and `"required": []`
+- [ ] Every **nested object** within `properties` also has `"additionalProperties": true` and `"required": []`
 - [ ] Every field has a `"description"` and an `"example"`
 - [ ] All example values are anonymized
 - [ ] `"type"` is present on every field that has `"nullable"`
@@ -372,6 +394,9 @@ If `key_value_store_schema.json` was generated in Phase 3, add a second property
 - [ ] If key-value store is used: `key_value_store_schema.json` has collections matching all `setValue`/`set_value` calls
 - [ ] If key-value store is used: each collection uses either `key` or `keyPrefix` (not both)
 - [ ] `actor.json` references all generated schema files
+- [ ] Schema field names match the actual keys in the code (camelCase/snake_case consistency)
+- [ ] If existing schemas were found in the repo, the new schema follows their conventions (description style, example format, view structure)
+- [ ] Schema fields are derived from existing type definitions (interfaces, TypedDicts, dataclasses) where available — no duplicated or divergent field definitions
 
 Present the generated schemas to the user for review before writing them.
 
