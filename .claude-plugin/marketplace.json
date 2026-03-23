@@ -57,6 +57,21 @@
       ],
       "category": "development",
       "version": "2.0.0"
+    },
+    {
+      "name": "apify-generate-output-schema",
+      "source": "./skills/apify-generate-output-schema",
+      "skills": "./",
+      "description": "Generate output schemas (dataset_schema.json, output_schema.json, key_value_store_schema.json) for an Apify Actor by analyzing its source code",
+      "keywords": [
+        "apify",
+        "actor",
+        "schema",
+        "output",
+        "dataset"
+      ],
+      "category": "development",
+      "version": "2.0.0"
     }
   ]
 }
